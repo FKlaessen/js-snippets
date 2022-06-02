@@ -35,19 +35,8 @@ let oldXHROpen = window.XMLHttpRequest.prototype.open;
 window.XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
 
     var requestUrl = arguments[1].startsWith('http') ? arguments[1] :  $("base").attr("href").val()+arguments[1];
-    let requestObject = {
-        0: arguments[0],
-        1: 'http://test.example.com/content/'+btoa(requestUrl+'?'+arguments[0]),
-        2: arguments[2],
-        3: arguments[3] ?? null,
-        4: arguments[4] ?? null,
-    };
+    url = 'http://test.example.com:8000/content/'+btoa(requestUrl);
 
-    console.log(requestObject);
-    this.addEventListener('load', function() {
-        console.log('load: ' + this.responseText);
-        // Hide loader
-    });
-
-    return oldXHROpen.apply(this, requestObject);
+    //apply arguments to original function
+    oldXHROpen.apply(this, arguments);
 }
