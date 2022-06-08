@@ -1,31 +1,55 @@
 //fetch interceptor
 const origFetch = window.fetch
 fetch = async (...args) => {
+    let [resource, config] = args
+    var apiHeaders = new Headers({});
 
-    let fetchUrl = ''
-    if ('url' in args[0]){
-        //Object.defineProperty(args[0],'url', {writable: true, enumerable: true, configurable: true})
-        fetchUrl = 'http://test.example.com/content/'+btoa(args[0]['url']+'?'+args[0]['method']);
-
-    } else {
-        fetchUrl = 'http://test.example.com/anonymize/'+btoa(args[0]);
+    if (config === undefined) {
+        config = args[0];
+        resource = args[0].url
     }
 
-    //create new request since request object is immutable
-    args = Object.assign(args);
-    let [resource, config ] = args
-
-    const request = new Request(fetchUrl, config);
-
-    //intercept result if needed
-    var result = await origFetch(request)
-
-/*    //set a tags
-    $("a").each(function() {
-        if (this.href !== 'http://127.0.0.1:8000/' && !this.href.startsWith('http://')) {
-            $(this).attr("href", 'http://localhost:8000/anonymize/'+(btoa(this.href)));
+    //set headers
+    //if length < 1 object was received -> iterate
+    if (Object.keys(config.headers).length < 1) {
+        for (var head of config.headers.entries()) {
+            apiHeaders[head[0]] = head[1];
         }
-    });*/
+    } else {
+        apiHeaders = config.headers;
+    }
+
+    if (config.method === 'POST') {
+        apiHeaders['X-CSRF-TOKEN'] = token;
+    }
+
+    //serialize request options
+    var serialized = {
+        method: config.method,
+        headers: apiHeaders,
+        mode: config.mode,
+        credentials: config.credentials,
+        cache: config.cache,
+        redirect: config.redirect,
+        referrer: config.referrer,
+        body: config.body
+    };
+
+    //add body to request if method is not get or head
+    if (args.method !== 'GET' && args.method !== 'HEAD') {
+        if (args.body !== undefined) {
+            serialized.body = Object.assign(request.body, {
+                _token: token
+            })
+        } else {
+            serialized.body = {_token: token}
+        }
+    }
+
+    //route to api
+    resource = 'http://test.example.com:8000/sw/' + btoa(resource);
+
+    var result = await origFetch(resource, serialized)
 
     return result;
 }
