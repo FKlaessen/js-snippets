@@ -64,3 +64,17 @@ window.XMLHttpRequest.prototype.open = function(method, url, async, user, passwo
     //apply arguments to original function
     oldXHROpen.apply(this, arguments);
 }
+
+//ajax send interceptor
+let oldXHRSend = window.XMLHttpRequest.prototype.send;
+window.XMLHttpRequest.prototype.send = function (body)
+{
+
+    //add csrf token to request
+    body = Object.assign(body, {
+        _token: token
+    })
+    body = JSON.stringify(body);
+
+    oldXHRSend.apply(this, arguments);
+}
